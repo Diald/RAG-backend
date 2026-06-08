@@ -1,0 +1,35 @@
+# Fly.io Configuration
+
+app = "rag-backend-api"
+primary_region = "iad"
+
+[build]
+  image = "rag-backend:latest"
+  builder = "paketobuildpacks"
+
+[env]
+  ENVIRONMENT = "production"
+  DEBUG = "false"
+  # Add other env vars as needed
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+[checks.httpget]
+  grace_period = "30s"
+  interval = "10s"
+  method = "GET"
+  path = "/health"
+  protocol = "http"
+  timeout = "5s"

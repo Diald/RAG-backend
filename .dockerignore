@@ -1,0 +1,46 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.egg-info
+.Python
+build/
+dist/
+eggs/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+
+# Qdrant
+qdrant_storage
+
+# Data (keep only in docker build context)
+data/
+*.pdf
+
+# Development
+.env
+.env.local
+logs/
+Makefile

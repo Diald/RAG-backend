@@ -1,0 +1,70 @@
+# AWS App Runner Configuration (CloudFormation template snippet)
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'RAG Backend API deployment to AWS App Runner'
+
+Parameters:
+  OpenAIApiKey:
+    Type: String
+    NoEcho: true
+    Description: OpenAI API key
+
+  QdrantUrl:
+    Type: String
+    Default: 'http://qdrant-db:6333'
+    Description: Qdrant database URL
+
+  QdrantApiKey:
+    Type: String
+    NoEcho: true
+    Description: Qdrant API key (if using cloud)
+
+Resources:
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: rag-backend-api
+      ImageScanningConfiguration:
+        ScanOnPush: true
+
+  AppRunnerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apprunner.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'
+
+  RAGBackendService:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: rag-backend-api
+      SourceConfiguration:
+        ImageRepository:
+          ImageIdentifier: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/rag-backend-api:latest'
+          ImageRepositoryType: ECR
+        AutoDeploymentsEnabled: true
+      InstanceConfiguration:
+        Cpu: '1 vCPU'
+        Memory: '2 GB'
+        InstanceRoleArn: !GetAtt AppRunnerRole.Arn
+      HealthCheckConfiguration:
+        Protocol: HTTP
+        Path: /health
+        Interval: 10
+        Timeout: 5
+      Tags:
+        - Key: Environment
+          Value: Production
+        - Key: Service
+          Value: RAG-Backend
+
+Outputs:
+  ServiceUrl:
+    Description: 'App Runner Service URL'
+    Value: !GetAtt RAGBackendService.ServiceUrl

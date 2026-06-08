@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-backend"
+version = "0.1.0"
+description = "Production-grade RAG backend API with LlamaIndex and Qdrant"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Team", email = "team@example.com"}
+]
+
+dependencies = [
+"fastapi>=0.103.0,<0.104.0",
+"uvicorn[standard]>=0.24.0,<0.25.0",
+
+"python-dotenv>=1.0.0,<2.0.0",
+"pydantic>=2.5.0,<3.0.0",
+"pydantic-settings>=2.1.0,<3.0.0",
+
+# LlamaIndex ecosystem
+"llama-index>=0.10.50,<0.11.0",
+"llama-index-embeddings-openai>=0.1.11,<0.2.0",
+"llama-index-vector-stores-qdrant>=0.2.17,<0.3.0",
+"llama-index-llms-openai>=0.1.23,<0.2.0",
+"llama-index-llms-groq>=0.1.4,<0.2.0",
+
+# Vector DB
+"qdrant-client>=1.7.0,<2.0.0",
+
+# Evaluation
+"ragas==0.1.21",
+
+# Documents
+"PyPDF2>=3.0.0,<4.0.0",
+
+# API
+"python-multipart>=0.0.6,<1.0.0",
+"httpx>=0.25.0,<1.0.0",
+"structlog>=23.0.0,<24.0.0",
+
+# LLM APIs
+"openai>=1.0.0,<2.0.0",
+"groq>=0.4.0,<1.0.0",
+
+# Retrieval
+"rank-bm25>=0.2.2,<1.0.0",
+"sentence-transformers>=2.2.0,<3.0.0",
+
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.3",
+    "pytest-asyncio==0.21.1",
+    "pytest-cov==4.1.0",
+    "black==23.12.0",
+    "ruff==0.1.8",
+    "mypy==1.7.1",
+    "pre-commit==3.5.0",
+    "ipython==8.18.1",
+]
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.setuptools.package-data]
+src = ["**/*.py"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "I"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
