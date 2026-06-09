@@ -27,6 +27,7 @@ class HybridRetriever:
         self.embedding_service = EmbeddingService()
         self.reranker = LightweightReranker()
         self.top_k = settings.top_k_retrieval
+        self.collection_name = settings.qdrant_collection_name
 
     def retrieve(
         self,
@@ -51,12 +52,14 @@ class HybridRetriever:
 
         # Dense vector search
         try:
-            dense_results = self.qdrant_client.search(
-                collection_name=settings.qdrant_collection_name,
-                query_vector=query_embedding,
-                limit=top_k * 2,  # Get more for reranking
-                query_filter=filters,
-            )
+            response = self.qdrant_client.query_points(
+                collection_name=self.collection_name,
+                query=query_embedding,
+                limit=top_k,
+                with_payload=True,
+                )
+
+            dense_results = response.points
             logger.debug(f"Dense search returned {len(dense_results)} results")
         except Exception as e:
             logger.error(f"Error in dense search: {e}")

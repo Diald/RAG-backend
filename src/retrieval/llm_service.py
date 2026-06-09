@@ -1,10 +1,8 @@
 """LLM Service for generating responses."""
 
 import logging
-from typing import Any
 
-from openai import OpenAI
-from groq import Groq
+from google import genai
 
 from src.core.config import settings
 from src.core.logging_config import get_logger
@@ -13,18 +11,13 @@ logger = get_logger(__name__)
 
 
 class LLMService:
-    """Generate responses using OpenAI or Groq."""
+    """Generate responses using Google Gemini."""
 
     def __init__(self):
-        """Initialize LLM client based on configuration."""
-        self.provider = settings.get_llm_provider()
-
-        if self.provider == "openai":
-            self.client = OpenAI(api_key=settings.openai_api_key)
-            self.model = settings.openai_model
-        else:
-            self.client = Groq(api_key=settings.groq_api_key)
-            self.model = settings.groq_model
+        """Initialize Google Gemini client."""
+        genai.configure(api_key=settings.google_api_key)
+        self.model = settings.google_llm_model
+        logger.info(f"Initialized Google Gemini with model: {self.model}")
 
     def generate(
         self,
@@ -33,7 +26,7 @@ class LLMService:
         temperature: float = 0.7,
         max_tokens: int = 1024,
     ) -> str:
-        """Generate a response from the LLM.
+        """Generate a response from Gemini.
 
         Args:
             prompt: User prompt
@@ -44,38 +37,29 @@ class LLMService:
         Returns:
             Generated response
         """
-        # Build system message with context
         system_message = """You are a helpful AI assistant answering questions based on provided context.
-        If the context doesn't contain relevant information, say so.
-        Always cite your sources when using information from the context."""
+If the context doesn't contain relevant information, say so.
+Always cite your sources when using information from the context."""
 
         if context:
             context_str = "\n\n".join(context)
             system_message += f"\n\nContext:\n{context_str}"
 
+        full_prompt = f"{system_message}\n\nUser Question: {prompt}"
+
         try:
-            if self.provider == "openai":
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
-                return response.choices[0].message.content or ""
-            else:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
-                return response.choices[0].message.content or ""
+            generation_config = genai.types.GenerationConfig(
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+            )
+            
+            model = genai.GenerativeModel(
+                self.model,
+                generation_config=generation_config,
+            )
+            
+            response = model.generate_content(full_prompt)
+            return response.text
 
         except Exception as e:
             logger.error(f"Error generating response: {e}")
@@ -88,7 +72,7 @@ class LLMService:
         temperature: float = 0.7,
         max_tokens: int = 1024,
     ):
-        """Generate a streaming response from the LLM.
+        """Generate a streaming response from Gemini.
 
         Args:
             prompt: User prompt
@@ -100,44 +84,31 @@ class LLMService:
             Response chunks
         """
         system_message = """You are a helpful AI assistant answering questions based on provided context.
-        If the context doesn't contain relevant information, say so.
-        Always cite your sources when using information from the context."""
+If the context doesn't contain relevant information, say so.
+Always cite your sources when using information from the context."""
 
         if context:
             context_str = "\n\n".join(context)
             system_message += f"\n\nContext:\n{context_str}"
 
+        full_prompt = f"{system_message}\n\nUser Question: {prompt}"
+
         try:
-            if self.provider == "openai":
-                stream = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    stream=True,
-                )
-
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
-            else:
-                stream = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    stream=True,
-                )
-
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
+            generation_config = genai.types.GenerationConfig(
+                temperature=temperature,
+                max_output_tokens=max_tokens,
+            )
+            
+            model = genai.GenerativeModel(
+                self.model,
+                generation_config=generation_config,
+            )
+            
+            stream = model.generate_content(full_prompt, stream=True)
+            
+            for chunk in stream:
+                if chunk.text:
+                    yield chunk.text
 
         except Exception as e:
             logger.error(f"Error in streaming response: {e}")

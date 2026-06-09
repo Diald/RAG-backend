@@ -45,7 +45,8 @@ class LightweightReranker:
         query_tokens = query.lower().split()
 
         # Initialize BM25
-        bm25 = BM25Okapi(tokenized_corpus=[text.lower().split() for text in texts])
+        tokenized_texts = [text.lower().split() for text in texts]
+        bm25 = BM25Okapi(tokenized_texts)
         bm25_scores = bm25.get_scores(query_tokens)
 
         # Normalize scores

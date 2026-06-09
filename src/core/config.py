@@ -17,14 +17,10 @@ class Settings(BaseSettings):
     api_title: str = "RAG Backend API"
     api_version: str = "0.1.0"
 
-    # OpenAI Configuration
-    openai_api_key: str
-    openai_model: str = "gpt-4o-mini"
-    embedding_model: str = "text-embedding-3-small"
-
-    # Groq Configuration (optional)
-    groq_api_key: str | None = None
-    groq_model: str = "mixtral-8x7b-32768"
+    # Google Generative AI Configuration
+    google_api_key: str
+    google_embedding_model: str = "embedding-001"
+    google_llm_model: str = "gemini-1.5-flash"
 
     # Qdrant Configuration
     qdrant_url: str = "http://localhost:6333"
@@ -32,7 +28,7 @@ class Settings(BaseSettings):
     qdrant_collection_name: str = "rag_documents"
 
     # Vector Store Configuration
-    vector_embedding_dim: int = 1536
+    vector_embedding_dim: int = 768
     top_k_retrieval: int = 5
     reranker_top_k: int = 3
     chunk_size: int = 1024
@@ -64,9 +60,9 @@ class Settings(BaseSettings):
         """Check if running in production."""
         return self.environment == "production"
 
-    def get_llm_provider(self) -> Literal["openai", "groq"]:
-        """Determine which LLM provider to use."""
-        return "groq" if self.groq_api_key else "openai"
+    def get_llm_provider(self) -> str:
+        """Return the LLM provider name."""
+        return "google"
 
 
 @lru_cache(maxsize=1)

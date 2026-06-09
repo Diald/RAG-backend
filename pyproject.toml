@@ -21,12 +21,9 @@ dependencies = [
 "pydantic>=2.5.0,<3.0.0",
 "pydantic-settings>=2.1.0,<3.0.0",
 
-# LlamaIndex ecosystem
+# LlamaIndex ecosystem (for document processing only)
 "llama-index>=0.10.50,<0.11.0",
-"llama-index-embeddings-openai>=0.1.11,<0.2.0",
 "llama-index-vector-stores-qdrant>=0.2.17,<0.3.0",
-"llama-index-llms-openai>=0.1.23,<0.2.0",
-"llama-index-llms-groq>=0.1.4,<0.2.0",
 
 # Vector DB
 "qdrant-client>=1.7.0,<2.0.0",
@@ -42,9 +39,8 @@ dependencies = [
 "httpx>=0.25.0,<1.0.0",
 "structlog>=23.0.0,<24.0.0",
 
-# LLM APIs
-"openai>=1.0.0,<2.0.0",
-"groq>=0.4.0,<1.0.0",
+# LLM API
+"google-generativeai>=0.3.0,<1.0.0",
 
 # Retrieval
 "rank-bm25>=0.2.2,<1.0.0",
