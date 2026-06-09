@@ -133,7 +133,3 @@ Format code:
 black src/ tests/
 ruff check src/ tests/ --fix
 ```
-
-## License
-
-MIT
