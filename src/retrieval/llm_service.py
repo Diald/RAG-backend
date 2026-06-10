@@ -1,8 +1,7 @@
 """LLM Service for generating responses."""
 
-import logging
-
 from google import genai
+from google.genai import types
 
 from src.core.config import settings
 from src.core.logging_config import get_logger
@@ -14,10 +13,17 @@ class LLMService:
     """Generate responses using Google Gemini."""
 
     def __init__(self):
-        """Initialize Google Gemini client."""
-        genai.configure(api_key=settings.google_api_key)
+        """Initialize Google GenAI client."""
+
+        self.client = genai.Client(
+            api_key=settings.google_api_key
+        )
+
         self.model = settings.google_llm_model
-        logger.info(f"Initialized Google Gemini with model: {self.model}")
+
+        logger.info(
+            f"Initialized Google Gemini with model: {self.model}"
+        )
 
     def generate(
         self,
@@ -26,20 +32,13 @@ class LLMService:
         temperature: float = 0.7,
         max_tokens: int = 1024,
     ) -> str:
-        """Generate a response from Gemini.
+        """Generate a response from Gemini."""
 
-        Args:
-            prompt: User prompt
-            context: Optional context documents
-            temperature: Sampling temperature
-            max_tokens: Maximum tokens to generate
-
-        Returns:
-            Generated response
-        """
-        system_message = """You are a helpful AI assistant answering questions based on provided context.
+        system_message = """
+You are a helpful AI assistant answering questions based on provided context.
 If the context doesn't contain relevant information, say so.
-Always cite your sources when using information from the context."""
+Always cite your sources when using information from the context.
+""".strip()
 
         if context:
             context_str = "\n\n".join(context)
@@ -48,18 +47,16 @@ Always cite your sources when using information from the context."""
         full_prompt = f"{system_message}\n\nUser Question: {prompt}"
 
         try:
-            generation_config = genai.types.GenerationConfig(
-                temperature=temperature,
-                max_output_tokens=max_tokens,
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=full_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                ),
             )
-            
-            model = genai.GenerativeModel(
-                self.model,
-                generation_config=generation_config,
-            )
-            
-            response = model.generate_content(full_prompt)
-            return response.text
+
+            return response.text or ""
 
         except Exception as e:
             logger.error(f"Error generating response: {e}")
@@ -72,20 +69,13 @@ Always cite your sources when using information from the context."""
         temperature: float = 0.7,
         max_tokens: int = 1024,
     ):
-        """Generate a streaming response from Gemini.
+        """Generate a streaming response from Gemini."""
 
-        Args:
-            prompt: User prompt
-            context: Optional context documents
-            temperature: Sampling temperature
-            max_tokens: Maximum tokens to generate
-
-        Yields:
-            Response chunks
-        """
-        system_message = """You are a helpful AI assistant answering questions based on provided context.
+        system_message = """
+You are a helpful AI assistant answering questions based on provided context.
 If the context doesn't contain relevant information, say so.
-Always cite your sources when using information from the context."""
+Always cite your sources when using information from the context.
+""".strip()
 
         if context:
             context_str = "\n\n".join(context)
@@ -94,20 +84,17 @@ Always cite your sources when using information from the context."""
         full_prompt = f"{system_message}\n\nUser Question: {prompt}"
 
         try:
-            generation_config = genai.types.GenerationConfig(
-                temperature=temperature,
-                max_output_tokens=max_tokens,
+            stream = self.client.models.generate_content_stream(
+                model=self.model,
+                contents=full_prompt,
+                config=types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                ),
             )
-            
-            model = genai.GenerativeModel(
-                self.model,
-                generation_config=generation_config,
-            )
-            
-            stream = model.generate_content(full_prompt, stream=True)
-            
+
             for chunk in stream:
-                if chunk.text:
+                if hasattr(chunk, "text") and chunk.text:
                     yield chunk.text
 
         except Exception as e:
